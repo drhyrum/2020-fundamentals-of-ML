@@ -3,7 +3,9 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 import pickle
+
 
 # read file from disk
 df = pd.read_csv('../../data/icecream/survey.csv')
@@ -37,10 +39,15 @@ toppings_mlb = preprocessing.MultiLabelBinarizer()  # toppings_mlb.classes_
 toppings = toppings_mlb.fit_transform(toppings_list).astype(np.float32)
 
 # set up inputs X and outputs (targets) Y
-X = np.concatenate([ismale, age, snack, icecream, cone, scoops], axis=1)
 Y = toppings
+topping_names = toppings_mlb.classes_
 
-# let's normalize the data
+X = np.concatenate([ismale, age, snack, icecream, cone, scoops], axis=1)
+feature_names = ['gender'] + ['age']
+feature_names += ['snack-' + s for s in snack_ohe.categories_[0]]
+feature_names += ['icecream-' + s for s in icecream_ohe.categories_[0]]
+feature_names += ['cone-' + s for s in cone_ohe.categories_[0]]
+feature_names += ['scoops-' + str(s) for s in scoops_ohe.categories_[0]]
 
 # holdout some data to validate that it works (IMPORTANT!)
 X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=20)
@@ -52,6 +59,18 @@ model.fit(X_train, Y_train)
 # validate that it works on the holdout set.  Does it overfit to training?
 Y_pred_proba = np.array(model.predict_proba(X_val))[..., 1].squeeze().T
 Y_pred = (Y_pred_proba > 0.5).astype(float)
+
+# how did we do on the holdout set?
+print("\nAccuracy for each topping:")
+for i, n in enumerate(topping_names):
+    score = accuracy_score(Y_val[:, i], Y_pred[:, i]) * 100
+    print(f"{i+1}. {n} accuracy = {score}%")
+
+# which features were most important?
+print("\nImportant features:")
+for i, (score, name) in enumerate(sorted(list(zip(model.feature_importances_, feature_names)), reverse=True)):
+    print(f"{i+1}. {name} ({score})")
+
 
 # let's save everything we need
 toppings_predictor = {
