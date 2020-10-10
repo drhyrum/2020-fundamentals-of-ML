@@ -40,7 +40,7 @@ gender_s = ask("What is your gender?", ["Male", "Female"])
 snack_s = ask("How would you best describe your snack preferences?", snack_ohe.categories_[0])
 icecream_s = ask("Of the following options, which is your favorite ice cream flavor?", icecream_ohe.categories_[0])
 cone_s = ask("Which cup or cone/bowl?", cone_ohe.categories_[0])
-scoops = ask("How many scoops?", [1, 2, 3])
+scoops = ask("How many scoops?", scoops_ohe.categories_[0])
 
 # convert to numbers
 ismale = np.array([float(gender_s == 'Male')])
@@ -52,6 +52,10 @@ scoops = scoops_ohe.transform([[scoops]])[0]
 
 x_test = np.concatenate([ismale, age, snack, icecream, cone, scoops], axis=0)
 
-y_pred = np.array(model.predict_proba([x_test])).squeeze()[:, 1] > 0.3
-print("You should try the following toppings:")
-print(toppings_mlb.classes_[y_pred])
+y_pred_prob = np.array(model.predict_proba([x_test])).squeeze()[:, 1]
+y_pred = y_pred_prob > 0.25
+topping_names = toppings_mlb.classes_[y_pred]
+topping_proba = y_pred_prob[y_pred]
+print("You should try the following toppings (in order):")
+for i, (prob, name) in enumerate(sorted(zip(topping_proba, topping_names), reverse=True)):
+    print(f"{i+1}. {name} ({round(prob*100)}%)")
