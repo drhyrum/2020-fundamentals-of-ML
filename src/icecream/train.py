@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import pickle
 
+# ####### PART 1: READ IN AND PREPARE DATA
 
 # read file from disk
 df = pd.read_csv('../../data/icecream/survey.csv')
@@ -49,12 +50,16 @@ feature_names += ['icecream-' + s for s in icecream_ohe.categories_[0]]
 feature_names += ['cone-' + s for s in cone_ohe.categories_[0]]
 feature_names += ['scoops-' + str(s) for s in scoops_ohe.categories_[0]]
 
+# ####### PART 2: TRAIN A MODEL
+
 # holdout some data to validate that it works (IMPORTANT!)
 X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=20)
 
 # train a model on the data
 model = RandomForestClassifier()
 model.fit(X_train, Y_train)
+
+# ####### PART 3: TEST MODEL'S PERFORMANCE
 
 # validate that it works on the holdout set.  Does it overfit to training?
 Y_pred_proba = np.array(model.predict_proba(X_val))[..., 1].squeeze().T
@@ -71,6 +76,8 @@ print("\nImportant features:")
 for i, (score, name) in enumerate(sorted(list(zip(model.feature_importances_, feature_names)), reverse=True)):
     print(f"{i+1}. {name} ({score})")
 
+
+# ####### PART 4: SAVE MODEL TO DISK
 
 # let's save everything we need
 toppings_predictor = {
