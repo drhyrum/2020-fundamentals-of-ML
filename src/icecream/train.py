@@ -9,7 +9,7 @@ import pickle
 # ####### PART 1: READ IN AND PREPARE DATA
 
 # read file from disk
-df = pd.read_csv('../../data/icecream/survey.csv')
+df = pd.read_csv('../../data/icecream/survey.csv', keep_default_na=False)
 
 # fix a typo (MY FAULT!)
 keys = list(df.keys())
@@ -35,7 +35,7 @@ scoops = scoops_ohe.fit_transform(np.atleast_2d(df[keys[8]]).T)
 
 # toppings is a comma-separated string "caramel, hot fudge, nuts, whipped cream"
 # first, turn it into a list of strings: "caramel", "hot fudge", "nuts", "whipped cream"
-toppings_list = [t.split(", ") for t in df[keys[6]]]
+toppings_list = [t.split(", ") if t else [] for t in df[keys[6]]]
 toppings_mlb = preprocessing.MultiLabelBinarizer()  # toppings_mlb.classes_
 toppings = toppings_mlb.fit_transform(toppings_list).astype(np.float32)
 
@@ -53,7 +53,7 @@ feature_names += ['scoops-' + str(s) for s in scoops_ohe.categories_[0]]
 # ####### PART 2: TRAIN A MODEL
 
 # holdout some data to validate that it works (IMPORTANT!)
-X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=20)
+X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=40)
 
 # train a model on the data
 model = RandomForestClassifier()
@@ -78,6 +78,9 @@ for i, (score, name) in enumerate(sorted(list(zip(model.feature_importances_, fe
 
 
 # ####### PART 4: SAVE MODEL TO DISK
+
+# retrain model with all the data
+model.fit(X, Y)
 
 # let's save everything we need
 toppings_predictor = {

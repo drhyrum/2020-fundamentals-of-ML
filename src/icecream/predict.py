@@ -27,10 +27,10 @@ def ask(question, options):
     print(question)
     print(f'Please select one of the following:')
     for i, opt in enumerate(options):
-        n = i+1
+        n = i + 1
         print(f'({n}) {opt}')
 
-    selection = get_int_between(1, len(options))-1
+    selection = get_int_between(1, len(options)) - 1
     return options[selection]
 
 
